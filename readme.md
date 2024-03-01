@@ -21,6 +21,7 @@ To answer the question “How to generate 100 dogs at distinct locations using d
 100-dogs generation at distinct locations problem may require specialized datasets. But right now we cannot annotate 100 dogs for each image, so we use COCO dataset. COCO is a large-scale object detection, segmentation, and captioning dataset, including data about human, animals, stuffs,… and dogs of courses with its respective bounding box and label.
 
 # Approach
+We consider the problem as conditional image generation with conditioning is annotation (bounding boxes and classes), and use Stable Diffusion model for this approach.
 
 Annotation information will be embedded by pretrained CLIP tokenizer and embedding. Then concat it with prompt embedding, then go to U-net by cross-attention mechanism for new image generation with objects in distinct locations.
 
