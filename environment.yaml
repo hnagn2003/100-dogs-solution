@@ -1,4 +1,4 @@
-name: ldm
+name: ldm_test
 channels:
   - pytorch
   - defaults
@@ -80,7 +80,7 @@ dependencies:
     - blinker==1.7.0
     - cachetools==5.3.3
     - click==8.1.7
-    - diffusers==0.26.3
+    - git+https://github.com/huggingface/diffusers
     - einops==0.3.0
     - filelock==3.13.1
     - frozenlist==1.4.1
@@ -154,13 +154,5 @@ dependencies:
     - torchmetrics==0.6.0
     - tornado==6.4
     - tqdm==4.66.2
-    - transformers==4.39.0.dev0
-    - tzdata==2024.1
-    - tzlocal==5.2
-    - urwid==2.6.7
-    - validators==0.22.0
-    - watchdog==4.0.0
-    - wcwidth==0.2.13
-    - werkzeug==3.0.1
-    - yarl==1.9.4
-    - zipp==3.17.0
+    - datasets
+    - transformers

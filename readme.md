@@ -18,17 +18,78 @@ To answer the question “How to generate 100 dogs at distinct locations using d
 
 # Dataset
 
-100-dogs generation at distinct locations problem may require specialized datasets. But right now we cannot annotate 100 dogs for each image, so we use COCO dataset. COCO is a large-scale object detection, segmentation, and captioning dataset, including data about human, animals, stuffs,… and dogs of courses with its respective bounding box and label.
+100-dogs generation at distinct locations problem may require specialized datasets. But right now we cannot annotate 100 dogs for each image, so we use COCO dataset. COCO is a large-scale object detection, segmentation, and captioning dataset, including data about human, animals, stuffs,… and dogs of courses with its respective bounding box and label. In this implement, I only use tiny COCO from https://github.com/chongruo/tiny-coco, and have some data preprocessing to convert to the .jsonl file format.
 
 # Approach
-We consider the problem as conditional image generation with conditioning is annotation (bounding boxes and classes), and use Stable Diffusion model for this approach.
 
-Annotation information will be embedded by pretrained CLIP tokenizer and embedding. Then concat it with prompt embedding, then go to U-net by cross-attention mechanism for new image generation with objects in distinct locations.
+I propose 2 approach. It is text2img-based method and img2img-based method.
+
+### Text2img method
+
+Annotation information will be embedded by CLIP tokenizer and embedding. Then concat it with prompt embedding, then go to U-net by cross-attention mechanism for new image generation with objects in distinct locations.
 
 # Implementation
 
-MY CODE IS A DRAFT. IT MAY WORKED NOT PROPERTY.
+### Environment
 
-I only implement it core pipeline, basicly based on StableDiffusionPipeline of [Diffusers](https://github.com/huggingface/diffusers/tree/main).
+```python
+conda env create -f environment.yaml
+conda activate ldm
+pip install accelerate
+pip install git+https://github.com/huggingface/diffusers
+```
 
-About particular training and sampling processes, refer its [docs](https://huggingface.co/docs/diffusers/v0.26.3/en/api/pipelines/stable_diffusion/text2img#diffusers.StableDiffusionPipeline).
+### Sampling
+
+Both 2 methods’ models is fine-tuned on pretrained "runwayml/stable-diffusion-v1-5”. I have not completed the training process to obtain the final output checkpoint. Therefore, I will temporarily run the code with stable-diffusion-v1-5 to ensure it could run.
+
+- For text-to-img method:
+    - To run
+    
+    ```python
+    python3 src/text2img_sampling.py
+    ```
+    
+    Annotation (bboxes, labels) will be treated as strings, be encoded and concat to the prompt embedding.
+    
+    ```python
+        annotation = ["label_74_bbox_455.98_436.73_58.57_36.36","label_74_bbox_405.44_594.41_76.59_40.23"] #[tl_x, tl_y, br_x, br_y, label (18 is dog in COCO)]
+    ```
+    
+- For img-to-img method:
+    - To run
+
+```python
+python3 src/img2img_sampling.py
+```
+
+I created mask base on the image’s bounding boxes and labels, then encoding it to feed to the denoising step.
+
+```python
+mask = create_mask([(0, 40, 100, 80, 18), (350, 400, 510, 510, 18)])
+```
+
+![Untitled](./assets/0.png)
+
+### Training
+
+- Text2img training
+
+```python
+python3 src/text2img_training.py  \
+--pretrained_model_name_or_path "runwayml/stable-diffusion-v1-5"  \
+--train_data_dir "./tiny-coco/small_coco" \
+--caption_column "custom_annotation" \
+--image_column "image" \
+--annotation_column "custom_annotation"
+```
+
+In this code I do not train CLIP tokenizer and embedding. Since embedding an annotation is difference from normal text encoding, I think we should set CLIP tokenizer and embedding to be trained.
+
+In fact that I do not have enough GPU resources, so I cannot verify if the training script run property. But when I run it, it went to the tqdm step 1 progress.
+
+![Untitled](./assets/1.png)
+
+- Img2img training
+
+I only implement training for text2img method. For the img2img method, the implementation is quite similar, with the only difference being the addition of an extra step to encode the image and create a mask for annotation.
